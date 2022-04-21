@@ -1,0 +1,36 @@
+How to Upgrade an EKS Cluster using Terraform
+The following steps are needed to successfully upgrade an EKS cluster to a new version. 
+
+Read the new version's release notes to determine the breaking changes and whether the upgrade will require creating a new cluster. If the upgrade doesn't require the creation of a new cluster, use the "In-Place Upgrade" steps; otherwise, use "New Cluster Creation Upgrade".
+
+In-Place Upgrade
+Update the version of the module "aws-stack".
+Fix any breaking changes to other configurations
+Run TFE via Jules to completion
+
+New Cluster Creation Upgrade
+Create a new folder duplicating all the subdirectory contents of the current cluster's configurations. For example, copy the contents of the "eks5" folder, creating a new one called "eks6".
+Update the version of the module "aws-stack" in "eks6".
+Add the terraform version for "eks6" in Jenkinsfile.
+Change the terraform command for "eks6" to "apply" in Jenkinsfile.
+Add a subdirectory mapping for "eks6" in Jenkinsfile.
+Fix any breaking changes to other configurations in "eks6".
+Scale all data loader deployments  in "eks5" down to 0 replicas
+Update the snapshots for "eks6" to the latest  in the environment variable file 
+Run TFE via Jules to completion to create an "eks6" cluster. Choose NO to enable the global domain.
+Download the TFE logs and run the python script "yaml_extractor.py" to create a "gridgain-pv-pvc.yaml" file.
+Apply the kube config "gridgain-pv-pvc.yaml"
+Run the Jules for "infra-cloud" on the "eks6" cluster to create the base Kubernetes configurations.
+Deploy Gridgain to the "eks6" cluster
+Deactivate the GridGain Cluster for "eks6".
+Deploy all the data loaders and scale their deployments down to 0 replicas
+Reactivate the GridGain Cluster for "eks6".
+Deploy the rest of the apps to the "eks6" cluster.
+Run a PQ integration test against the "eks6" cluster to verify that the cluster is in good condition.
+Run TFE via Jules for the "eks5" cluster. Choose NO to enable the global domain.
+Run TFE via Jules for the "eks6" cluster. Choose YES to enable the global domain.
+Deactivate GridGain in "eks5" and scale it down to 0 replicas for both statefulsets.
+Scale down Gridgain Control Center Backend deployment in "eks5" to 0 replicas.
+Decommission the "eks5" cluster by running Jules for infra-pathfinder using the terraform command "destroy".
+
+
